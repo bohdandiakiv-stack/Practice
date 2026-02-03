@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using FluentValidation;
 using TaskManager.Application.Dtos.Tasks;
 
 namespace TaskManager.Application.Services.Implementations
@@ -7,11 +8,19 @@ namespace TaskManager.Application.Services.Implementations
     {
         private readonly ITaskRepository _taskRepository;
         private readonly IMapper _mapper;
+        private readonly IValidator<CreateTaskDto> _createTaskValidator;
+        private readonly IValidator<UpdateTaskDto> _updateTaskValidator;
 
-        public TaskService(ITaskRepository taskRepository, IMapper mapper)
+        public TaskService(
+            ITaskRepository taskRepository,
+            IMapper mapper, 
+            IValidator<CreateTaskDto> createTaskValidator, 
+            IValidator<UpdateTaskDto> updateTaskValidator)
         {
             _taskRepository = taskRepository;
             _mapper = mapper;
+            _createTaskValidator = createTaskValidator;
+            _updateTaskValidator = updateTaskValidator;
         }
 
         public async Task<IEnumerable<TaskDto>> GetAllAsync(CancellationToken cancellationToken = default)
@@ -28,6 +37,13 @@ namespace TaskManager.Application.Services.Implementations
 
         public async Task<TaskDto> CreateAsync(CreateTaskDto dto, CancellationToken cancellationToken = default)
         {
+            var validationResult = await _createTaskValidator.ValidateAsync(dto, cancellationToken);
+
+            if (!validationResult.IsValid)
+            {
+                throw new ValidationException(validationResult.Errors);
+            }
+
             var task = _mapper.Map<TaskItem>(dto);
             var created = await _taskRepository.CreateAsync(task, cancellationToken);
             return _mapper.Map<TaskDto>(created);
@@ -35,6 +51,12 @@ namespace TaskManager.Application.Services.Implementations
 
         public async Task<TaskDto?> UpdateAsync(string id, UpdateTaskDto dto, CancellationToken cancellationToken = default)
         {
+            var validationResult = await _updateTaskValidator.ValidateAsync(dto, cancellationToken);
+            if (!validationResult.IsValid)
+            {
+                throw new ValidationException(validationResult.Errors);
+            }
+
             var existing = await _taskRepository.GetByIdAsync(id, cancellationToken);
             if (existing == null) return null;
 

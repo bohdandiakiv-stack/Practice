@@ -18,6 +18,48 @@ builder.Services.AddApplicationWithInfrastructure(builder.Configuration);
 
 var app = builder.Build();
 
+
+app.UseExceptionHandler(errorApp =>
+{
+    errorApp.Run(async context =>
+    {
+        var exceptionHandlerFeature = context.Features.Get<Microsoft.AspNetCore.Diagnostics.IExceptionHandlerFeature>();
+
+        if (exceptionHandlerFeature?.Error != null)
+        {
+            var exception = exceptionHandlerFeature.Error;
+
+            context.Response.ContentType = "application/json";
+
+            if (exception is FluentValidation.ValidationException validationException)
+            {
+                context.Response.StatusCode = StatusCodes.Status400BadRequest;
+
+                var errors = validationException.Errors.Select(e => new
+                {
+                    Field = e.PropertyName,
+                    Error = e.ErrorMessage
+                });
+
+                await context.Response.WriteAsJsonAsync(new
+                {
+                    Message = "Validation failed",
+                    Errors = errors
+                });
+            }
+            else
+            {
+                context.Response.StatusCode = StatusCodes.Status500InternalServerError;
+                await context.Response.WriteAsJsonAsync(new
+                {
+                    Message = "An unexpected error occurred.",
+                    Detail = exception.Message
+                });
+            }
+        }
+    });
+});
+
 app.UseSwagger();
 app.UseSwaggerUI(c =>
 {
