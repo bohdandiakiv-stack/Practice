@@ -1,5 +1,7 @@
 ﻿using Couchbase;
 using Couchbase.KeyValue;
+using TaskManager.Domain.Models.Tasks;
+using TaskManager.Domain.Repositories;
 
 namespace TaskManager.Infrastructure.Repositories;
 
