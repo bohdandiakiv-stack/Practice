@@ -11,16 +11,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="init-couchbase.sh" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Content Include="init-couchbase.sh">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="Aspire.Hosting" Version="13.1.0" />
     <PackageReference Include="Aspire.Hosting.AppHost" Version="13.1.0" />
     <PackageReference Include="Couchbase.Aspire.Hosting" Version="1.0.0-alpha.4" />

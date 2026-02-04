@@ -13,24 +13,35 @@ namespace TaskManager.Infrastructure
         {
             services.AddCouchbase(options =>
             {
-                var connectionString = configuration.GetConnectionString("couchbase")
-                    ?? "couchbase://localhost";
+                var fullConnectionString = configuration.GetConnectionString("couchbase");
 
-                options.ConnectionString = connectionString;
-                options.UserName = configuration["Couchbase:UserName"];
-                options.Password = configuration["Couchbase:Password"];
-                options.Buckets = configuration.GetSection("Couchbase:Buckets").Get<List<string>>();
+                if (string.IsNullOrWhiteSpace(fullConnectionString))
+                    throw new InvalidOperationException("Couchbase connection string is missing.");
+
+                var uri = new Uri(fullConnectionString);
+
+                if (string.IsNullOrWhiteSpace(uri.UserInfo))
+                    throw new InvalidOperationException("Couchbase connection string must contain credentials.");
+
+                var userInfoParts = uri.UserInfo.Split(':', 2);
+                var username = userInfoParts[0];
+                var password = userInfoParts.Length > 1 ? userInfoParts[1] : string.Empty;
+                var port = uri.Port > 0 ? uri.Port : 11210;
+
+                options.ConnectionString = $"couchbase://{uri.Host}:{port}";
+                options.UserName = username;
+                options.Password = password;
             });
 
-            services.AddScoped<ITaskRepository, TaskRepository>(sp =>
+            services.AddCouchbaseBucket<INamedBucketProvider>("Tasks");
+            services.AddScoped<ITaskRepository>(sp =>
             {
-                var provider = sp.GetRequiredService<IBucketProvider>();
-                var bucket = provider.GetBucketAsync("TaskManager").GetAwaiter().GetResult();
-
-                var scope = bucket.DefaultScope();
-                var collection = bucket.DefaultCollection();
-
-                return new TaskRepository(bucket, scope, collection);
+                var bucketProvider = sp.GetRequiredService<INamedBucketProvider>();
+                var bucket = bucketProvider.GetBucketAsync().GetAwaiter().GetResult();
+                var scope = bucket.Scope("1l");
+                var collection = scope.Collection("tasks");
+                var cluster = bucket.Cluster;
+                return new TaskRepository(collection, cluster);
             });
 
             return services;
