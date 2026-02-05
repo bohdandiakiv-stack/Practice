@@ -1,7 +1,6 @@
-﻿namespace TaskManager.Application.Dtos.Tasks
-{
-    public record CreateTaskDto(
-        string Title,
-        string Description
-        );
-}
+﻿namespace TaskManager.Application.Dtos.Tasks;
+
+public record CreateTaskDto(
+    string Title,
+    string Description
+    );

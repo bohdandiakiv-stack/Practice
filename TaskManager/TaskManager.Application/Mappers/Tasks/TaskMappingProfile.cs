@@ -1,15 +1,15 @@
 ﻿using AutoMapper;
 using TaskManager.Application.Dtos.Tasks;
+using TaskManager.Domain.Models.Tasks;
 
-namespace TaskManager.Application.Mappers.Tasks
+namespace TaskManager.Application.Mappers.Tasks;
+
+public class TaskMappingProfile : Profile
 {
-    public class TaskMappingProfile : Profile
+    public TaskMappingProfile()
     {
-        public TaskMappingProfile()
-        {
-            CreateMap<TaskItem, TaskDto>();
-            CreateMap<CreateTaskDto, TaskItem>();
-            CreateMap<UpdateTaskDto, TaskItem>();
-        }
+        CreateMap<TaskItem, TaskDto>();
+        CreateMap<CreateTaskDto, TaskItem>();
+        CreateMap<UpdateTaskDto, TaskItem>();
     }
 }

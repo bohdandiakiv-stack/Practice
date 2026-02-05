@@ -2,70 +2,69 @@
 using TaskManager.Application.Dtos.Tasks;
 using TaskManager.Application.Services;
 
-namespace TaskManager.Api.Controllers
+namespace TaskManager.Api.Controllers;
+
+[ApiController]
+[Route("api/tasks")]
+public class TaskController : ControllerBase
 {
-    [ApiController]
-    [Route("api/tasks")]
-    public class TaskController : ControllerBase
+    private readonly ITaskService _taskService;
+
+    public TaskController(ITaskService taskService)
     {
-        private readonly ITaskService _taskService;
+        _taskService = taskService;
+    }
 
-        public TaskController(ITaskService taskService)
-        {
-            _taskService = taskService;
-        }
+    [HttpGet]
+    public async Task<IActionResult> GetAll(CancellationToken cancellationToken)
+    {
+        var tasks = await _taskService.GetAllAsync(cancellationToken);
+        return Ok(tasks);
+    }
 
-        [HttpGet]
-        public async Task<IActionResult> GetAll(CancellationToken cancellationToken)
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetById(string id, CancellationToken cancellationToken)
+    {
+        var task = await _taskService.GetByIdAsync(id, cancellationToken);
+        if (task == null)
         {
-            var tasks = await _taskService.GetAllAsync(cancellationToken);
-            return Ok(tasks);
+            return NotFound();
         }
+        return Ok(task);
+    }
 
-        [HttpGet("{id}")]
-        public async Task<IActionResult> GetById(string id, CancellationToken cancellationToken)
-        {
-            var task = await _taskService.GetByIdAsync(id, cancellationToken);
-            if (task == null)
-            {
-                return NotFound();
-            }
-            return Ok(task);
-        }
+    [HttpPost]
+    public async Task<IActionResult> Create([FromBody] CreateTaskDto dto, CancellationToken cancellationToken)
+    {
+        var createdTask = await _taskService.CreateAsync(dto, cancellationToken);
+        return CreatedAtAction(nameof(GetById), new { id = createdTask.Id }, createdTask);
+    }
 
-        [HttpPost]
-        public async Task<IActionResult> Create([FromBody] CreateTaskDto dto, CancellationToken cancellationToken)
+    [HttpPut("{id}")]
+    public async Task<IActionResult> Update(string id, [FromBody] UpdateTaskDto dto, CancellationToken cancellationToken)
+    {
+        var updatedTask = await _taskService.UpdateAsync(id, dto, cancellationToken);
+        if (updatedTask == null)
         {
-            var createdTask = await _taskService.CreateAsync(dto, cancellationToken);
-            return CreatedAtAction(nameof(GetById), new { id = createdTask.Id }, createdTask);
+            return NotFound();
         }
+        return Ok(updatedTask);
+    }
 
-        [HttpPut("{id}")]
-        public async Task<IActionResult> Update(string id, [FromBody] UpdateTaskDto dto, CancellationToken cancellationToken)
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> Delete(string id, CancellationToken cancellationToken)
+    {
+        var deleted = await _taskService.DeleteAsync(id, cancellationToken);
+        if (!deleted)
         {
-            var updatedTask = await _taskService.UpdateAsync(id, dto, cancellationToken);
-            if (updatedTask == null)
-            {
-                return NotFound();
-            }
-            return Ok(updatedTask);
+            return NotFound();
         }
+        return NoContent();
+    }
 
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(string id, CancellationToken cancellationToken)
-        {
-            var deleted = await _taskService.DeleteAsync(id, cancellationToken);
-            if (!deleted)
-            {
-                return NotFound();
-            }
-            return NoContent();
-        }
-
-        [HttpPost("test")]
-        public IActionResult CreateTest()
-        {
-            return Ok(new { Message = "Test endpoint works!" });
-        }
+    [HttpPost("test")]
+    public IActionResult CreateTest()
+    {
+        return Ok(new { Message = "Test endpoint works!" });
     }
 }
