@@ -1,7 +1,11 @@
 <Solution>
-  <Project Path="TaskAppHost/TaskAppHost.csproj" Id="1deb670a-33c5-47b4-adb7-05cb5b72f6e4" />
-  <Project Path="TaskManager.Api/TaskManager.Api.csproj" />
-  <Project Path="TaskManager.Application/TaskManager.Application.csproj" />
-  <Project Path="TaskManager.Domain/TaskManager.Domain.csproj" />
-  <Project Path="TaskManager.Infrastructure/TaskManager.Infrastructure.csproj" />
+  <Folder Name="/orchestration/">
+    <Project Path="TaskAppHost/TaskAppHost.csproj" Id="1deb670a-33c5-47b4-adb7-05cb5b72f6e4" />
+  </Folder>
+  <Folder Name="/src/">
+    <Project Path="TaskManager.Api/TaskManager.Api.csproj" />
+    <Project Path="TaskManager.Application/TaskManager.Application.csproj" />
+    <Project Path="TaskManager.Domain/TaskManager.Domain.csproj" />
+    <Project Path="TaskManager.Infrastructure/TaskManager.Infrastructure.csproj" />
+  </Folder>
 </Solution>

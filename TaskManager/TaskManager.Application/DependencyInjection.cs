@@ -1,10 +1,11 @@
 ﻿using FluentValidation;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using TaskManager.Application.Dtos.Tasks;
 using TaskManager.Application.Mappers.Tasks;
 using TaskManager.Application.Services;
 using TaskManager.Application.Services.Implementations;
+using TaskManager.Application.Validation.Facades;
+using TaskManager.Application.Validation.Facades.Interfaces;
 using TaskManager.Application.Validation.Tasks;
 using TaskManager.Infrastructure;
 
@@ -27,8 +28,9 @@ public static class DependencyInjection
         services.AddScoped<ITaskService, TaskService>();
 
         services.AddAutoMapper(cfg => cfg.AddProfile<TaskMappingProfile>());
-        services.AddScoped<IValidator<CreateTaskDto>, CreateTaskValidator>();
-        services.AddScoped<IValidator<UpdateTaskDto>, UpdateTaskValidator>();
+        services.AddValidatorsFromAssemblyContaining<CreateTaskValidator>(includeInternalTypes: true);
+
+        services.AddScoped<IValidationService, ValidationService>();
 
         return services;
     }
