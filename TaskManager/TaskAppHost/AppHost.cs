@@ -1,5 +1,4 @@
 ﻿using Couchbase.Aspire.Hosting;
-using TaskAppHost.Helpers;
 
 var builder = DistributedApplication.CreateBuilder(args);
 var config = builder.Configuration;
@@ -13,7 +12,8 @@ couchbasedb = builder
     .WithManagementPort(8091)
     .WithDataVolumes();
 
-var bucket = couchbasedb.AddBucket("Tasks");
+var bucket = couchbasedb.AddBucket("Tasks")
+    .WithScope(scopeName: "1l", collections: ["tasks"]);
 
 builder.Eventing.Subscribe<AfterResourcesCreatedEvent>(async (@event, ct) =>
 {
@@ -24,13 +24,6 @@ builder.Eventing.Subscribe<AfterResourcesCreatedEvent>(async (@event, ct) =>
                     .ConfigureAwait(false);
         Console.WriteLine($"Connecting to Couchbase with connection string: {connectionString}");
 
-        await CouchbaseInitializer.InitializeCouchbaseAsync(
-            connectionString: connectionString,
-            bucketName: "Tasks",
-            scopeName: "1l",
-            collectionName: "tasks",
-            cancellationToken: ct
-        );
     }
     catch (Exception ex)
     {
