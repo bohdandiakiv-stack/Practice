@@ -8,4 +8,8 @@
     <Project Path="TaskManager.Domain/TaskManager.Domain.csproj" />
     <Project Path="TaskManager.Infrastructure/TaskManager.Infrastructure.csproj" />
   </Folder>
+  <Folder Name="/tests/">
+    <Project Path="TaskManager.IntegrationTests/TaskManager.IntegrationTests.csproj" Id="e9c29c18-fec0-43ff-b75e-5c6c061dd5cc" />
+    <Project Path="TaskManager.UnitTests/TaskManager.UnitTests.csproj" Id="1c884d9f-aa72-4b50-af77-aa2f5660b498" />
+  </Folder>
 </Solution>
