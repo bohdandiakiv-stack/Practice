@@ -1,4 +1,5 @@
 ﻿using FluentAssertions;
+using FluentAssertions.Execution;
 using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
 using TaskManager.Application.Dtos.Tasks;
@@ -25,7 +26,7 @@ public class ValidationServiceTests
         var dto = new CreateTaskDto("Title", "Description");
 
         // Act
-        var act = () => _validationService.ValidateAsync(dto);
+        Func<Task> act = () => _validationService.ValidateAsync(dto);
 
         // Assert
         await act.Should().NotThrowAsync();
@@ -38,9 +39,11 @@ public class ValidationServiceTests
         var dto = new CreateTaskDto(string.Empty, "Description");
 
         // Act
-        var act = () => _validationService.ValidateAsync(dto);
+        Func<Task> act = () => _validationService.ValidateAsync(dto);
 
         // Assert
+        using var scope = new AssertionScope();
+
         var exception = await act.Should().ThrowAsync<ValidationException>();
 
         exception.Which.Errors
@@ -55,9 +58,11 @@ public class ValidationServiceTests
         var dto = new UnknownDto();
 
         // Act
-        var act = () => _validationService.ValidateAsync(dto);
+        Func<Task> act = () => _validationService.ValidateAsync(dto);
 
         // Assert
+        using var scope = new AssertionScope();
+
         var exception = await act.Should().ThrowAsync<InvalidOperationException>();
 
         exception.Which.Message
@@ -66,14 +71,20 @@ public class ValidationServiceTests
     }
 
     [Fact]
-    public async Task ValidateAsync_NullInstance_ThrowsArgumentNullException()
+    public async Task ValidateAsync_NullInstance_ThrowsInvalidOperationException()
     {
         // Act
-        var act = () => _validationService
-            .ValidateAsync<CreateTaskDto>(null!);
+        Func<Task> act = () =>
+            _validationService.ValidateAsync<CreateTaskDto>(null!);
 
         // Assert
-        await act.Should().ThrowAsync<ArgumentNullException>();
+        using var scope = new AssertionScope();
+
+        var exception = await act.Should().ThrowAsync<InvalidOperationException>();
+
+        exception.Which.Message
+            .Should()
+            .Contain("null model");
     }
 
     private record UnknownDto;

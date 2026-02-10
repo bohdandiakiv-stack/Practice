@@ -76,6 +76,13 @@ public class TaskServiceTests : BaseTestFixture
             .Setup(r => r.GetByIdAsync("1", It.IsAny<CancellationToken>()))
             .ReturnsAsync(task);
 
+        _validationServiceMock
+            .Setup(v => v.ValidateNotNull<TaskItem>(
+                task,
+                It.IsAny<string>(),
+                It.IsAny<object[]>()))
+            .Verifiable();
+
         // Act
         var result = await _sut.GetByIdAsync("1");
 
@@ -84,28 +91,29 @@ public class TaskServiceTests : BaseTestFixture
         result!.Id.Should().Be("1");
         result.Title.Should().Be("Title");
 
-        _taskRepositoryMock.Verify(
-            r => r.GetByIdAsync("1", It.IsAny<CancellationToken>()),
-            Times.Once);
+        _validationServiceMock.Verify();
     }
 
     [Fact]
-    public async Task GetByIdAsync_TaskNotFound_ReturnsNull()
+    public async Task GetByIdAsync_TaskNotFound_ThrowsValidationException()
     {
         // Arrange
         _taskRepositoryMock
             .Setup(r => r.GetByIdAsync("404", It.IsAny<CancellationToken>()))
             .ReturnsAsync((TaskItem?)null);
 
+        _validationServiceMock
+            .Setup(v => v.ValidateNotNull<TaskItem>(
+                (TaskItem?)null,
+                It.IsAny<string>(),
+                It.IsAny<object[]>()))
+            .Throws(new ValidationException("Task not found"));
+
         // Act
-        var result = await _sut.GetByIdAsync("404");
+        Func<Task> act = () => _sut.GetByIdAsync("404");
 
         // Assert
-        result.Should().BeNull();
-
-        _taskRepositoryMock.Verify(
-            r => r.GetByIdAsync("404", It.IsAny<CancellationToken>()),
-            Times.Once);
+        await act.Should().ThrowAsync<ValidationException>();
     }
 
     #endregion
@@ -162,7 +170,7 @@ public class TaskServiceTests : BaseTestFixture
             .ThrowsAsync(new ValidationException("validation error"));
 
         // Act
-        var act = () => _sut.CreateAsync(dto);
+        Func<Task> act = () => _sut.CreateAsync(dto);
 
         // Assert
         await act.Should().ThrowAsync<ValidationException>();
@@ -197,6 +205,13 @@ public class TaskServiceTests : BaseTestFixture
             .Setup(r => r.GetByIdAsync("1", It.IsAny<CancellationToken>()))
             .ReturnsAsync(existing);
 
+        _validationServiceMock
+            .Setup(v => v.ValidateNotNull<TaskItem>(
+                existing,
+                It.IsAny<string>(),
+                It.IsAny<object[]>()))
+            .Verifiable();
+
         _taskRepositoryMock
             .Setup(r => r.UpdateAsync(existing, It.IsAny<CancellationToken>()))
             .ReturnsAsync(existing);
@@ -209,17 +224,11 @@ public class TaskServiceTests : BaseTestFixture
         result!.Title.Should().Be(dto.Title);
         result.Description.Should().Be(dto.Description);
 
-        _taskRepositoryMock.Verify(
-            r => r.GetByIdAsync("1", It.IsAny<CancellationToken>()),
-            Times.Once);
-
-        _taskRepositoryMock.Verify(
-            r => r.UpdateAsync(existing, It.IsAny<CancellationToken>()),
-            Times.Once);
+        _validationServiceMock.Verify();
     }
 
     [Fact]
-    public async Task UpdateAsync_TaskNotFound_ReturnsNull_AndDoesNotUpdate()
+    public async Task UpdateAsync_TaskNotFound_ThrowsValidationException_AndDoesNotUpdate()
     {
         // Arrange
         var dto = new UpdateTaskDto("Title", "Desc");
@@ -232,11 +241,18 @@ public class TaskServiceTests : BaseTestFixture
             .Setup(r => r.GetByIdAsync("1", It.IsAny<CancellationToken>()))
             .ReturnsAsync((TaskItem?)null);
 
+        _validationServiceMock
+            .Setup(v => v.ValidateNotNull<TaskItem>(
+                (TaskItem?)null,
+                It.IsAny<string>(),
+                It.IsAny<object[]>()))
+            .Throws(new ValidationException("Task not found"));
+
         // Act
-        var result = await _sut.UpdateAsync("1", dto);
+        Func<Task> act = () => _sut.UpdateAsync("1", dto);
 
         // Assert
-        result.Should().BeNull();
+        await act.Should().ThrowAsync<ValidationException>();
 
         _taskRepositoryMock.Verify(
             r => r.UpdateAsync(It.IsAny<TaskItem>(), It.IsAny<CancellationToken>()),
