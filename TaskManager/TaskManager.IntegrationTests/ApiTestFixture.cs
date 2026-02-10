@@ -27,20 +27,30 @@ public class ApiTestFixture : IAsyncLifetime
 
     private async Task WaitForApiAsync()
     {
-        for (int i = 0; i < 20; i++)
+        var timeout = TimeSpan.FromSeconds(30);
+        var startTime = DateTime.UtcNow;
+
+        while (DateTime.UtcNow - startTime < timeout)
         {
             try
             {
-                var response = await Client.PostAsync("/api/tasks/test", null);
-                if (response.IsSuccessStatusCode)
-                    return;
-            }
-            catch { }
+                var response = await Client.GetAsync("/health");
 
-            await Task.Delay(1000);
+                if (response.IsSuccessStatusCode)
+                {
+                    Console.WriteLine("API is ready!");
+                    return;
+                }
+            }
+            catch (HttpRequestException)
+            {
+            }
+
+            await Task.Delay(500);
         }
 
-        throw new TimeoutException("API not ready");
+        throw new TimeoutException(
+            $"API did not become ready within {timeout.TotalSeconds} seconds");
     }
 
     public Task DisposeAsync()

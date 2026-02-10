@@ -9,6 +9,7 @@ builder.Services.AddEndpointsApiExplorer();
 
 builder.Logging.AddConsole();
 builder.Logging.AddDebug();
+builder.Services.AddHealthChecks();
 
 builder.Services.AddSwaggerGen(c =>
 {
@@ -18,6 +19,8 @@ builder.Services.AddSwaggerGen(c =>
 builder.Services.AddApplicationWithInfrastructure(builder.Configuration);
 
 var app = builder.Build();
+
+app.MapHealthChecks("/health");
 
 
 app.UseMiddleware<GlobalExceptionMiddleware>();

@@ -61,10 +61,4 @@ public class TaskController : ControllerBase
         }
         return NoContent();
     }
-
-    [HttpPost("test")]
-    public IActionResult CreateTest()
-    {
-        return Ok(new { Message = "Test endpoint works!" });
-    }
 }
